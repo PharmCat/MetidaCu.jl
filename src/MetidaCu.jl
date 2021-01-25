@@ -1,7 +1,8 @@
 module MetidaCu
-    using LinearAlgebra
-    using Metida, MetidaNLopt, CUDA
-    import Metida: LMM, gmat_base_z2!, rmat_basep_z2!
+    using LinearAlgebra, CUDA
+    import MetidaNLopt, Metida
+    import MetidaNLopt: reml_sweep_β_cuda
+    import Metida: LMM, rmat_base_inc!, zgz_base_inc!
 
     function MetidaNLopt.reml_sweep_β_cuda(lmm::LMM, θ::Vector{T}) where T
         n             = length(lmm.data.block)
@@ -24,8 +25,8 @@ module MetidaCu
             q    = length(lmm.data.block[i])
             qswm = q + lmm.rankx
             V    = zeros(T, q, q)
-            Metida.gmat_base_z2!(V, θ, lmm.covstr, lmm.data.block[i], lmm.covstr.sblock[i])
-            Metida.rmat_basep_z2!(V, θ[lmm.covstr.tr[end]], lmm.covstr, lmm.data.block[i], lmm.covstr.sblock[i])
+            Metida.zgz_base_inc!(V, θ, lmm.covstr, lmm.data.block[i], lmm.covstr.sblock[i])
+            Metida.rmat_base_inc!(V, θ[lmm.covstr.tr[end]], lmm.covstr, lmm.data.block[i], lmm.covstr.sblock[i])
             A[i] = CuArray(V)
             X[i] = CuArray(view(lmm.data.xv,  lmm.data.block[i], :))
             y[i] = CuArray(view(lmm.data.yv, lmm.data.block[i]))
