@@ -5,7 +5,7 @@ module MetidaCu
     import Metida: LMM, rmat_base_inc!, zgz_base_inc!
 
     function MetidaNLopt.reml_sweep_β_cuda(lmm::LMM, θ::Vector{T}) where T
-        n             = length(lmm.data.block)
+        n             = length(lmm.covstr.vcovblock)
         N             = length(lmm.data.yv)
         c             = (N - lmm.rankx)*log(2π)
         #-----------------------------------------------------------------------
@@ -22,18 +22,23 @@ module MetidaCu
         qswm          = zero(Int)
         logdetθ₂      = zero(T)
         @inbounds for i = 1:n
-            q    = length(lmm.data.block[i])
+            q    = length(lmm.covstr.vcovblock[i])
             qswm = q + lmm.rankx
             V    = zeros(T, q, q)
-            Metida.zgz_base_inc!(V, θ, lmm.covstr, lmm.data.block[i], lmm.covstr.sblock[i])
-            Metida.rmat_base_inc!(V, θ[lmm.covstr.tr[end]], lmm.covstr, lmm.data.block[i], lmm.covstr.sblock[i])
+            Metida.zgz_base_inc!(V, θ, lmm.covstr, lmm.covstr.vcovblock[i], lmm.covstr.sblock[i])
+            Metida.rmat_base_inc!(V, θ[lmm.covstr.tr[end]], lmm.covstr, lmm.covstr.vcovblock[i], lmm.covstr.sblock[i])
             A[i] = CuArray(V)
-            X[i] = CuArray(view(lmm.data.xv,  lmm.data.block[i], :))
-            y[i] = CuArray(view(lmm.data.yv, lmm.data.block[i]))
+            X[i] = CuArray(view(lmm.data.xv,  lmm.covstr.vcovblock[i], :))
+            y[i] = CuArray(view(lmm.data.yv, lmm.covstr.vcovblock[i]))
             #-------------------------------------------------------------------
             #Cholesky
             A[i] = LinearAlgebra.LAPACK.potrf!('L', A[i])[1]
-            θ₁  += logdet(Cholesky(Matrix(A[i]), 'L', 0))
+            try
+                θ₁  += logdet(Cholesky(Matrix(A[i]), 'L', 0))
+            catch
+                lmmlog!(lmm, LMMLogMsg(:ERROR, "θ₁ not estimated during REML calculation, V isn't positive definite or |V| less zero."))
+                return (Inf, nothing, nothing, Inf)
+            end
             vX   = LinearAlgebra.LAPACK.potrs!('L', A[i], copy(X[i]))
             vy   = LinearAlgebra.LAPACK.potrs!('L', A[i], copy(y[i]))
             CUDA.CUBLAS.gemm!('T', 'N', one(T), X[i], vX, one(T), θ₂tc)
