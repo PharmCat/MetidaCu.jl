@@ -51,8 +51,7 @@ module MetidaCu
         copyto!(β, LinearAlgebra.LAPACK.potrs!('L', θ₂tc, βtc))
         # θ₃ calculation
         @simd for i = 1:n
-            r = CUDA.CUBLAS.gemv!('N', -one(T), X[i], βtc,
-            one(T), y[i])
+            r = CUDA.CUBLAS.gemv!('N', -one(T), X[i], βtc, one(T), y[i])
             vr   = LinearAlgebra.LAPACK.potrs!('L', A[i], copy(r))
             θ₃  += r'*vr
         end
