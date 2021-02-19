@@ -1,7 +1,7 @@
 name = "MetidaCu"
 uuid = "dbe4a1c8-7bb7-46c3-acb3-40ea3d5c6ceb"
 authors = ["Vladimir Arnautov <mail@pharmcat.net>"]
-version = "0.1.2"
+version = "0.1.3"
 
 [deps]
 
@@ -15,7 +15,7 @@ LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 
 Metida = "0.4"
 MetidaNLopt = "0.1"
-CUDA = "2.4, 2.5"
+CUDA = "2.4, 2.5, 2.6"
 julia = "1.1, 1.2, 1.3, 1.4, 1.5, 1.6"
 
 [extras]
