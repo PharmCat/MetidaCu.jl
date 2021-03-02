@@ -14,8 +14,8 @@ transform!(df0, :formulation=> categorical, renamecols=false)
     random = VarEffect(@covstr(formulation|subject), CSH),
     repeated = VarEffect(@covstr(formulation|subject), Metida.DIAG),
     )
-    fit!(lmm; solver = :cuda)
+    fit!(lmm; solver = :cuda, rholinkf = :sigm, f_tol=1e-11, x_tol=1e-11)
     #10.065239006121315
     #10.065759784473597
-    @test lmm.result.reml       ≈ 10.066984731645064 atol=1E-6
+    @test lmm.result.reml       ≈ 10.06534259559994 atol=1E-6
 end
