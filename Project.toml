@@ -1,7 +1,7 @@
 name = "MetidaCu"
 uuid = "dbe4a1c8-7bb7-46c3-acb3-40ea3d5c6ceb"
 authors = ["Vladimir Arnautov <mail@pharmcat.net>"]
-version = "0.3.2"
+version = "0.3.1"
 
 [deps]
 
